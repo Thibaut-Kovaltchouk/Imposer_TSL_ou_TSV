@@ -2,60 +2,33 @@
 __author__ = 'Thibaut Kovaltchouk'
 # -*- coding: utf-8 -*-
 
-filename = "input_test.svg"
+filename = "lenna.jpg"
 
-from colormath.color_objects import sRGBColor as RGBColor
-from colormath.color_objects import HSVColor
-from colormath.color_conversions import convert_color
-from colormath.color_conversions import convert_color
 import numpy as np
+import cv2
 
-def replace_impose(strColorHex, value, impose="H"):
-    color = RGBColor.new_from_rgb_hex(strColorHex)
-    color = convert_color(color, HSVColor)
+def replace_impose(imageBGR, value, impose="H"):
+    imgIn = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)
     # we fixe the value depending of the parameter impose
     if impose.lower() == "h":
-        color.hsv_h = value
+        imgIn[:,:,0] = value*np.ones(imgIn.shape[:2], dtype=np.uint8)
     elif impose.lower() == "s":
-        color.hsv_s = value
+        imgIn[:,:,1] = value*np.ones(imgIn.shape[:2], dtype=np.uint8)
     elif impose.lower() == "v":
-        color.hsv_v = value
+        imgIn[:,:,2] = value*np.ones(imgIn.shape[:2], dtype=np.uint8)
     else:
         print("impose = ", impose)
         print("Should be H, S or V")
-    color = convert_color(color, RGBColor)
-    return color.get_rgb_hex()
+    imgOut = cv2.cvtColor(imgIn, cv2.COLOR_HSV2BGR)
+    return imgOut
 
-file = open(filename, mode='r')
-svgFile = file.read()
-file.close()
-
-prefixes = ["fill:#", "stroke:#", "stop-color:#"]
-
-set_colors = set() 
-for prefix in prefixes:
-    i = svgFile.find(prefix, 0)
-    while i != -1:
-        i = i + len(prefix)
-        set_colors.add(svgFile[i:i+6])
-        i = svgFile.find(prefix, i+6)
-
+imgIn = cv2.imread(filename)
 
 listH = np.linspace(0, 360, 16)
 
 for h in listH:
-    svgFileOut = svgFile[:]
-    for color in set_colors:
-        print(color)
-        newColor = replace_impose(color, h, impose="H")
-        print(newColor[1:])
-        svgFileOut = svgFileOut.replace(color, newColor[1:])
+    img = np.copy(imgIn)
+    New_img = replace_impose(img, int(h/2), impose="H")
     base = filename.split(".")[-2]
-    file = open(base + "_H" + str(int(h))+".svg", mode='w')
-    file.write(svgFileOut)
-    file.close()
-
-    
-    
-    
-    
+    outputImage = base + "_H" + str(int(h)) + ".png"
+    cv2.imwrite(outputImage, New_img)

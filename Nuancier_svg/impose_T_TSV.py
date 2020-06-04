@@ -54,8 +54,3 @@ for h in listH:
     file = open(base + "_H" + str(int(h))+".svg", mode='w')
     file.write(svgFileOut)
     file.close()
-
-    
-    
-    
-    
